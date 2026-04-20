@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinAI — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gold:#C9A84C;--gold-light:#E8C97A;--gold-dim:#3a2e10;
+  --dark:#08090A;--dark2:#0F1012;--dark3:#161719;--dark4:#1E2023;--dark5:#252729;
+  --text:#F2EDE4;--text-muted:#9B9589;--text-dim:#5A5750;
+  --teal:#1ECAB8;--red:#E84C6A;--green:#3DCC8E;--blue:#4A9EFF;
+  --sidebar:220px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--dark);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;min-height:100vh;overflow-x:hidden}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar);background:var(--dark2);border-right:1px solid rgba(255,255,255,.05);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50}
+.sidebar-logo{padding:1.6rem 1.4rem 1rem;font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:.5rem}
+.sidebar-logo span{color:var(--gold)}
+.sidebar-logo small{font-size:.6rem;background:rgba(201,168,76,.15);color:var(--gold);padding:.15rem .5rem;border-radius:999px;letter-spacing:.08em;text-transform:uppercase;font-family:'DM Sans',sans-serif;font-weight:400;margin-left:.3rem}
+.nav-section{padding:.8rem 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.nav-section-label{font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);padding:.4rem 1.4rem .6rem;font-weight:500}
+.nav-item{display:flex;align-items:center;gap:.75rem;padding:.65rem 1.4rem;font-size:.875rem;color:var(--text-muted);cursor:pointer;transition:all .2s;border:none;background:none;width:100%;text-align:left;font-family:'DM Sans',sans-serif;border-left:2px solid transparent;text-decoration:none}
+.nav-item:hover{color:var(--text);background:rgba(255,255,255,.04)}
+.nav-item.active{color:var(--gold);background:rgba(201,168,76,.06);border-left-color:var(--gold)}
+.nav-icon{font-size:1rem;width:20px;text-align:center;flex-shrink:0}
+.sidebar-bottom{margin-top:auto;padding:1rem 1.4rem;border-top:1px solid rgba(255,255,255,.05)}
+.user-row{display:flex;align-items:center;gap:.75rem}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--gold-dim),var(--gold));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:.75rem;font-weight:700;color:var(--dark);flex-shrink:0}
+.user-name{font-size:.84rem;font-weight:500;color:var(--text)}
+.user-plan{font-size:.7rem;color:var(--gold)}
+.logout-btn{margin-left:auto;background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:.85rem;padding:.2rem;transition:color .2s}
+.logout-btn:hover{color:var(--red)}
+
+/* MAIN */
+.main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh}
+
+/* TOPBAR */
+.topbar{padding:1.2rem 2rem;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;justify-content:space-between;background:rgba(8,9,10,.8);backdrop-filter:blur(10px);position:sticky;top:0;z-index:40}
+.topbar-left h2{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:700;letter-spacing:-.01em}
+.topbar-left p{font-size:.78rem;color:var(--text-dim);margin-top:.1rem}
+.topbar-right{display:flex;align-items:center;gap:.8rem}
+.add-btn{background:var(--gold);border:none;border-radius:8px;padding:.5rem 1.1rem;font-size:.82rem;color:var(--dark);cursor:pointer;font-family:'Syne',sans-serif;font-weight:600;transition:all .2s}
+.add-btn:hover{background:var(--gold-light)}
+
+/* CONTENT */
+.content{padding:2rem;flex:1}
+
+/* EMPTY STATE */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4rem 2rem;text-align:center;border:1px dashed rgba(255,255,255,.1);border-radius:16px;background:var(--dark3)}
+.empty-icon{font-size:3rem;margin-bottom:1rem;opacity:.4}
+.empty-title{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;color:var(--text-muted);margin-bottom:.5rem}
+.empty-sub{font-size:.84rem;color:var(--text-dim);max-width:300px;line-height:1.6;margin-bottom:1.5rem}
+.empty-btn{background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:.65rem 1.4rem;font-size:.85rem;color:var(--gold);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.empty-btn:hover{background:rgba(201,168,76,.2)}
+
+/* KPI CARDS */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
+.kpi-card{background:var(--dark3);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:1.4rem;position:relative;overflow:hidden;transition:border-color .2s,transform .2s}
+.kpi-card:hover{border-color:rgba(201,168,76,.2);transform:translateY(-2px)}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent-color,var(--gold)),transparent);opacity:.6}
+.kpi-label{font-size:.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.09em;margin-bottom:.6rem}
+.kpi-val{font-family:'Syne',sans-serif;font-size:1.7rem;font-weight:700;line-height:1;margin-bottom:.5rem}
+.kpi-zero{color:var(--text-dim) !important;font-size:1.3rem !important}
+.kpi-change{font-size:.75rem;display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .6rem;border-radius:999px;color:var(--text-dim);background:rgba(255,255,255,.04)}
+.kpi-change.up{background:rgba(61,204,142,.1);color:var(--green)}
+.kpi-change.dn{background:rgba(232,76,106,.1);color:var(--red)}
+
+/* CHART SECTION */
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-bottom:2rem}
+.chart-card{background:var(--dark3);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:1.4rem}
+.chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem}
+.chart-title{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:600}
+.chart-sub{font-size:.75rem;color:var(--text-dim);margin-top:.1rem}
+.chart-wrap{position:relative;height:200px}
+
+/* DONUT */
+.donut-wrap{position:relative;height:170px;display:flex;align-items:center;justify-content:center}
+.donut-center{position:absolute;text-align:center;pointer-events:none}
+.donut-center span{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;display:block}
+.donut-center small{font-size:.65rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em}
+.legend{margin-top:.8rem;display:flex;flex-direction:column;gap:.45rem}
+.legend-item{display:flex;align-items:center;justify-content:space-between;font-size:.78rem}
+.legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-right:.5rem}
+.legend-label{display:flex;align-items:center;color:var(--text-muted);flex:1}
+.legend-val{color:var(--text);font-weight:500}
+
+/* TRANSACTIONS */
+.bottom-row{display:grid;grid-template-columns:1.5fr 1fr;gap:1rem;margin-bottom:2rem}
+.card{background:var(--dark3);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:1.4rem}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem}
+.card-title{font-family:'Syne',sans-serif;font-size:.95rem;font-weight:600}
+.see-all{font-size:.75rem;color:var(--gold);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif}
+.txn-list{display:flex;flex-direction:column;gap:.5rem}
+.txn{display:flex;align-items:center;gap:.9rem;padding:.65rem .8rem;border-radius:10px;transition:background .2s}
+.txn:hover{background:rgba(255,255,255,.03)}
+.txn-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0}
+.txn-info{flex:1}
+.txn-name{font-size:.85rem;font-weight:500}
+.txn-cat{font-size:.72rem;color:var(--text-dim)}
+.txn-date{font-size:.7rem;color:var(--text-dim);margin-left:auto;margin-right:.8rem}
+.txn-amt{font-size:.88rem;font-weight:600;font-family:'Syne',sans-serif}
+.txn-amt.cr{color:var(--green)}
+.txn-amt.dr{color:var(--red)}
+
+/* AI CHAT */
+.ai-chat{display:flex;flex-direction:column;gap:.7rem;max-height:280px;overflow-y:auto;margin-bottom:.8rem}
+.ai-chat::-webkit-scrollbar{width:3px}
+.ai-chat::-webkit-scrollbar-thumb{background:rgba(201,168,76,.2);border-radius:3px}
+.chat-msg{padding:.8rem 1rem;border-radius:10px;font-size:.82rem;line-height:1.55;max-width:92%}
+.chat-msg.ai{background:rgba(30,202,184,.06);border:1px solid rgba(30,202,184,.1);color:var(--text-muted)}
+.chat-msg.ai strong{color:var(--teal);display:block;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.3rem}
+.chat-msg.user{background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.15);color:var(--text);margin-left:auto}
+.ai-input-row{display:flex;gap:.5rem}
+.ai-input{flex:1;background:var(--dark4);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:.65rem .9rem;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.82rem;outline:none;transition:border .2s}
+.ai-input:focus{border-color:var(--gold)}
+.ai-input::placeholder{color:var(--text-dim)}
+.ai-send{background:var(--gold);border:none;border-radius:8px;padding:.65rem .9rem;cursor:pointer;font-size:.85rem;color:var(--dark);font-weight:700;transition:background .2s}
+.ai-send:hover{background:var(--gold-light)}
+
+/* GOALS */
+.goals-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem}
+.goal-card{background:var(--dark3);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:1.4rem}
+.goal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem}
+.goal-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem}
+.goal-pct{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--gold)}
+.goal-name{font-size:.88rem;font-weight:600;margin-bottom:.2rem;font-family:'Syne',sans-serif}
+.goal-sub{font-size:.72rem;color:var(--text-dim);margin-bottom:.8rem}
+.goal-bar-bg{background:rgba(255,255,255,.06);border-radius:999px;height:5px;overflow:hidden}
+.goal-bar-fill{height:100%;border-radius:999px;transition:width 1s ease}
+.goal-meta{display:flex;justify-content:space-between;margin-top:.5rem;font-size:.7rem;color:var(--text-dim)}
+
+/* BUDGET */
+.budget-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.7rem;margin-bottom:2rem}
+.budget-item{background:var(--dark3);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:1rem 1.2rem}
+.budget-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem}
+.budget-cat{display:flex;align-items:center;gap:.6rem;font-size:.85rem}
+.budget-nums{font-size:.75rem;color:var(--text-dim)}
+.budget-nums strong{color:var(--text);font-weight:500}
+.bbar-bg{background:rgba(255,255,255,.06);border-radius:999px;height:4px;overflow:hidden}
+.bbar-fill{height:100%;border-radius:999px}
+
+/* MODAL OVERLAY */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal{background:var(--dark3);border:1px solid rgba(201,168,76,.15);border-radius:16px;padding:2rem;width:90%;max-width:460px;position:relative;max-height:90vh;overflow-y:auto}
+.modal h3{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:700;margin-bottom:.3rem}
+.modal p{font-size:.82rem;color:var(--text-muted);margin-bottom:1.5rem}
+.modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--text-dim);font-size:1.2rem;cursor:pointer;transition:color .2s}
+.modal-close:hover{color:var(--red)}
+.form-row{margin-bottom:1rem}
+.form-label{font-size:.72rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:.4rem}
+.form-input{width:100%;background:var(--dark4);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:.75rem 1rem;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.9rem;outline:none;transition:border .2s}
+.form-input:focus{border-color:var(--gold)}
+.form-input::placeholder{color:var(--text-dim)}
+select.form-input option{background:var(--dark4)}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+.submit-btn{width:100%;background:var(--gold);border:none;border-radius:8px;padding:.85rem;font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;color:var(--dark);cursor:pointer;transition:background .2s;margin-top:.5rem}
+.submit-btn:hover{background:var(--gold-light)}
+.tab-switch{display:flex;background:var(--dark4);border-radius:8px;padding:3px;margin-bottom:1.2rem;border:1px solid rgba(255,255,255,.05)}
+.ts-btn{flex:1;padding:.5rem;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:.84rem;color:var(--text-dim);cursor:pointer;border-radius:6px;transition:all .2s}
+.ts-btn.active{background:var(--gold);color:var(--dark);font-weight:600}
+
+/* SECTION HEADERS */
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.section-head-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700}
+.section-add-btn{background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);border-radius:6px;padding:.35rem .8rem;font-size:.76rem;color:var(--gold);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.section-add-btn:hover{background:rgba(201,168,76,.2)}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .charts-row,.bottom-row{grid-template-columns:1fr}
+  .goals-grid,.budget-grid{grid-template-columns:1fr}
+  .content,.topbar{padding:1rem}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <span>Fin<span style="color:var(--gold)">AI</span></span>
+    <small>Pro</small>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Main</div>
+    <a class="nav-item active" href="dashboard.html"><span class="nav-icon">◈</span>Dashboard</a>
+    <a class="nav-item" href="#" onclick="openModal('txnModal')"><span class="nav-icon">↔</span>Transactions</a>
+    <a class="nav-item" href="#" onclick="openModal('goalModal')"><span class="nav-icon">◎</span>Goals</a>
+    <a class="nav-item" href="#" onclick="openModal('budgetModal')"><span class="nav-icon">⬡</span>Budget</a>
+  </div>
+  <div class="nav-section">
+    <div class="nav-section-label">Intelligence</div>
+    <a class="nav-item" href="#aiSection"><span class="nav-icon">✦</span>AI Advisor</a>
+  </div>
+  <div class="sidebar-bottom">
+    <div class="user-row">
+      <div class="user-avatar" id="sidebarAvatar">?</div>
+      <div>
+        <div class="user-name" id="sidebarName">Loading...</div>
+        <div class="user-plan">Pro Plan</div>
+      </div>
+      <button class="logout-btn" onclick="logout()" title="Logout">⏏</button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h2 id="greeting">Welcome to FinAI</h2>
+      <p id="topbarDate"></p>
+    </div>
+    <div class="topbar-right">
+      <button class="add-btn" onclick="openModal('txnModal')">+ Add Transaction</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+      <div class="kpi-card" style="--accent-color:var(--gold)">
+        <div class="kpi-label">💰 Net Worth</div>
+        <div class="kpi-val kpi-zero" id="kpiNetWorth">₹0</div>
+        <span class="kpi-change" id="kpiNetWorthChange">No data yet</span>
+      </div>
+      <div class="kpi-card" style="--accent-color:var(--green)">
+        <div class="kpi-label">💼 Total Income</div>
+        <div class="kpi-val kpi-zero" id="kpiIncome" style="color:var(--green)">₹0</div>
+        <span class="kpi-change" id="kpiIncomeChange">Add income transactions</span>
+      </div>
+      <div class="kpi-card" style="--accent-color:var(--red)">
+        <div class="kpi-label">🛒 Total Expenses</div>
+        <div class="kpi-val kpi-zero" id="kpiExpense" style="color:var(--red)">₹0</div>
+        <span class="kpi-change" id="kpiExpenseChange">Add expense transactions</span>
+      </div>
+      <div class="kpi-card" style="--accent-color:var(--teal)">
+        <div class="kpi-label">🏦 Savings Rate</div>
+        <div class="kpi-val kpi-zero" id="kpiSavings" style="color:var(--teal)">0%</div>
+        <span class="kpi-change" id="kpiSavingsChange">Add income to calculate</span>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW -->
+    <div class="charts-row">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Income vs Expenses</div>
+            <div class="chart-sub" id="chartSub">No transactions yet — add some to see your chart</div>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="lineChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Spending Breakdown</div>
+            <div class="chart-sub">By category this month</div>
+          </div>
+        </div>
+        <div class="donut-wrap">
+          <canvas id="donutChart"></canvas>
+          <div class="donut-center">
+            <span id="donutTotal">₹0</span>
+            <small>Total</small>
+          </div>
+        </div>
+        <div class="legend" id="donutLegend">
+          <div style="text-align:center;font-size:.78rem;color:var(--text-dim);padding:.5rem 0">Add expenses to see breakdown</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSACTIONS + AI -->
+    <div class="bottom-row">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Recent Transactions</div>
+          <button class="see-all" onclick="openModal('txnModal')">+ Add New</button>
+        </div>
+        <div id="txnList">
+          <div class="empty-state" style="padding:2rem">
+            <div class="empty-icon">💳</div>
+            <div class="empty-title">No transactions yet</div>
+            <div class="empty-sub">Click "Add Transaction" to record your first income or expense</div>
+            <button class="empty-btn" onclick="openModal('txnModal')">+ Add Transaction</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="aiSection">
+        <div class="card-header">
+          <div class="card-title">✦ AI Advisor</div>
+          <span style="font-size:.7rem;background:rgba(30,202,184,.1);color:var(--teal);padding:.2rem .6rem;border-radius:999px;border:1px solid rgba(30,202,184,.15)">Online</span>
+        </div>
+        <div class="ai-chat" id="aiChat">
+          <div class="chat-msg ai"><strong>◈ FinAI</strong>Hello! I'm your AI financial advisor. Add some transactions and I'll give you personalised insights about your spending and savings. Ask me anything!</div>
+        </div>
+        <div class="ai-input-row">
+          <input class="ai-input" id="aiInput" type="text" placeholder="Ask anything about your money..." onkeydown="if(event.key==='Enter')sendAI()">
+          <button class="ai-send" onclick="sendAI()">→</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GOALS -->
+    <div class="section-head">
+      <div class="section-head-title">Financial Goals</div>
+      <button class="section-add-btn" onclick="openModal('goalModal')">+ Add Goal</button>
+    </div>
+    <div id="goalsGrid">
+      <div class="empty-state" style="margin-bottom:2rem">
+        <div class="empty-icon">🎯</div>
+        <div class="empty-title">No goals set yet</div>
+        <div class="empty-sub">Set a financial goal like "Buy a Car" or "Emergency Fund" and track your progress</div>
+        <button class="empty-btn" onclick="openModal('goalModal')">+ Create First Goal</button>
+      </div>
+    </div>
+
+    <!-- BUDGET -->
+    <div class="section-head">
+      <div class="section-head-title">Monthly Budget</div>
+      <button class="section-add-btn" onclick="openModal('budgetModal')">+ Set Budget</button>
+    </div>
+    <div id="budgetGrid">
+      <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <div class="empty-title">No budgets set</div>
+        <div class="empty-sub">Set spending limits per category and FinAI will warn you when you're close to the limit</div>
+        <button class="empty-btn" onclick="openModal('budgetModal')">+ Set First Budget</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ═══════════════════ MODALS ═══════════════════ -->
+
+<!-- ADD TRANSACTION MODAL -->
+<div class="modal-overlay" id="txnModal" style="display:none" onclick="handleOverlayClick(event,'txnModal')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('txnModal')">✕</button>
+    <h3>Add Transaction</h3>
+    <p>Record an income or expense to your dashboard</p>
+    <div class="tab-switch">
+      <button class="ts-btn active" id="expenseTab" onclick="switchTxnType('expense')">💸 Expense</button>
+      <button class="ts-btn" id="incomeTab" onclick="switchTxnType('income')">💰 Income</button>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Description</label>
+      <input class="form-input" id="txnName" placeholder="e.g. Zomato, Salary, Rent...">
+    </div>
+    <div class="form-row">
+      <label class="form-label">Amount (₹)</label>
+      <input class="form-input" id="txnAmount" type="number" placeholder="e.g. 5000" min="1">
+    </div>
+    <div class="form-row">
+      <label class="form-label">Category</label>
+      <select class="form-input" id="txnCategory">
+        <option value="Food & Dining">🍔 Food & Dining</option>
+        <option value="Groceries">🛒 Groceries</option>
+        <option value="Transport">🚗 Transport</option>
+        <option value="Entertainment">🎬 Entertainment</option>
+        <option value="Shopping">🛍️ Shopping</option>
+        <option value="Utilities">💡 Utilities</option>
+        <option value="Health">🏥 Health</option>
+        <option value="Investments">📈 Investments</option>
+        <option value="Salary">💼 Salary</option>
+        <option value="Freelance">💻 Freelance</option>
+        <option value="Other">📦 Other</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Date</label>
+      <input class="form-input" id="txnDate" type="date">
+    </div>
+    <button class="submit-btn" onclick="addTransaction()">Add Transaction</button>
+  </div>
+</div>
+
+<!-- ADD GOAL MODAL -->
+<div class="modal-overlay" id="goalModal" style="display:none" onclick="handleOverlayClick(event,'goalModal')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('goalModal')">✕</button>
+    <h3>Create a Goal</h3>
+    <p>What are you saving towards?</p>
+    <div class="form-row">
+      <label class="form-label">Goal Name</label>
+      <input class="form-input" id="goalName" placeholder="e.g. Buy a Car, Emergency Fund, Europe Trip">
+    </div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0">
+        <label class="form-label">Target Amount (₹)</label>
+        <input class="form-input" id="goalTarget" type="number" placeholder="e.g. 500000">
+      </div>
+      <div class="form-row" style="margin-bottom:0">
+        <label class="form-label">Already Saved (₹)</label>
+        <input class="form-input" id="goalSaved" type="number" placeholder="e.g. 50000" value="0">
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:.8rem">
+      <label class="form-label">Target Date</label>
+      <input class="form-input" id="goalDate" type="date">
+    </div>
+    <div class="form-row">
+      <label class="form-label">Icon (emoji)</label>
+      <input class="form-input" id="goalIcon" placeholder="e.g. 🏠 🚗 ✈️ 📱" value="🎯">
+    </div>
+    <button class="submit-btn" onclick="addGoal()">Create Goal</button>
+  </div>
+</div>
+
+<!-- ADD BUDGET MODAL -->
+<div class="modal-overlay" id="budgetModal" style="display:none" onclick="handleOverlayClick(event,'budgetModal')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('budgetModal')">✕</button>
+    <h3>Set Monthly Budget</h3>
+    <p>Set a spending limit for a category this month</p>
+    <div class="form-row">
+      <label class="form-label">Category</label>
+      <select class="form-input" id="budgetCat">
+        <option value="Food & Dining">🍔 Food & Dining</option>
+        <option value="Groceries">🛒 Groceries</option>
+        <option value="Transport">🚗 Transport</option>
+        <option value="Entertainment">🎬 Entertainment</option>
+        <option value="Shopping">🛍️ Shopping</option>
+        <option value="Utilities">💡 Utilities</option>
+        <option value="Health">🏥 Health</option>
+        <option value="Other">📦 Other</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Monthly Limit (₹)</label>
+      <input class="form-input" id="budgetLimit" type="number" placeholder="e.g. 15000">
+    </div>
+    <button class="submit-btn" onclick="addBudget()">Set Budget</button>
+  </div>
+</div>
+
+<!-- PROFILE SETUP MODAL (shown on first login) -->
+<div class="modal-overlay" id="profileModal" style="display:none">
+  <div class="modal">
+    <h3>👋 Welcome to FinAI!</h3>
+    <p>Let's set up your profile to get started</p>
+    <div class="form-row">
+      <label class="form-label">Your Full Name</label>
+      <input class="form-input" id="profileName" placeholder="e.g. Rahul Sharma">
+    </div>
+    <div class="form-row">
+      <label class="form-label">Monthly Income (₹) — optional</label>
+      <input class="form-input" id="profileIncome" type="number" placeholder="e.g. 80000">
+    </div>
+    <div class="form-row">
+      <label class="form-label">What's your main financial goal?</label>
+      <select class="form-input" id="profileGoal">
+        <option value="Save more money">💰 Save more money</option>
+        <option value="Track expenses">📊 Track my expenses</option>
+        <option value="Invest wisely">📈 Invest wisely</option>
+        <option value="Pay off debt">💳 Pay off debt</option>
+        <option value="Buy a home">🏠 Buy a home</option>
+        <option value="Build emergency fund">🚨 Build emergency fund</option>
+      </select>
+    </div>
+    <button class="submit-btn" onclick="saveProfile()">Let's Go! →</button>
+  </div>
+</div>
+
+<script>
+// ═══════════ STATE — all data stored in localStorage ═══════════
+let state = {
+  user: null,           // { name, email, income, mainGoal }
+  transactions: [],     // { id, name, amount, type, category, date }
+  goals: [],            // { id, name, target, saved, date, icon }
+  budgets: [],          // { id, category, limit }
+};
+
+let lineChart = null;
+let donutChart = null;
+let txnType = 'expense';
+
+// ═══════════ INIT ═══════════
+window.onload = function() {
+  loadState();
+  setTodayDate();
+  updateGreeting();
+  renderAll();
+
+  // Show profile setup if new user
+  if (!state.user) {
+    openModal('profileModal');
+  }
+};
+
+function setTodayDate() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('txnDate').value = today;
+
+  const options = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+  document.getElementById('topbarDate').textContent = new Date().toLocaleDateString('en-IN', options);
+}
+
+function loadState() {
+  const saved = localStorage.getItem('finai_state');
+  if (saved) {
+    try { state = JSON.parse(saved); } catch(e) {}
+  }
+}
+
+function saveState() {
+  localStorage.setItem('finai_state', JSON.stringify(state));
+}
+
+function logout() {
+  if (confirm('Log out of FinAI?')) {
+    localStorage.removeItem('finai_state');
+    window.location.href = 'login.html';
+  }
+}
+
+// ═══════════ PROFILE ═══════════
+function saveProfile() {
+  const name = document.getElementById('profileName').value.trim();
+  if (!name) { alert('Please enter your name'); return; }
+
+  state.user = {
+    name: name,
+    income: parseFloat(document.getElementById('profileIncome').value) || 0,
+    mainGoal: document.getElementById('profileGoal').value
+  };
+  saveState();
+  closeModal('profileModal');
+  updateGreeting();
+
+  // Welcome AI message
+  const chat = document.getElementById('aiChat');
+  chat.innerHTML += `<div class="chat-msg ai"><strong>◈ FinAI</strong>Welcome, ${name}! 🎉 Your goal is to "${state.user.mainGoal}". Start by adding your first transaction — I'll analyse your spending patterns and give you personalised advice as you go.</div>`;
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function updateGreeting() {
+  const hour = new Date().getHours();
+  const time = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+  const name = state.user ? state.user.name.split(' ')[0] : '';
+  document.getElementById('greeting').textContent = name
+    ? `Good ${time}, ${name} 👋`
+    : 'Welcome to FinAI 👋';
+
+  if (state.user) {
+    const initials = state.user.name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+    document.getElementById('sidebarAvatar').textContent = initials;
+    document.getElementById('sidebarName').textContent = state.user.name;
+  }
+}
+
+// ═══════════ TRANSACTIONS ═══════════
+function switchTxnType(type) {
+  txnType = type;
+  document.getElementById('expenseTab').classList.toggle('active', type === 'expense');
+  document.getElementById('incomeTab').classList.toggle('active', type === 'income');
+
+  const catSelect = document.getElementById('txnCategory');
+  if (type === 'income') {
+    catSelect.innerHTML = `
+      <option value="Salary">💼 Salary</option>
+      <option value="Freelance">💻 Freelance</option>
+      <option value="Business">🏢 Business</option>
+      <option value="Investment Returns">📈 Investment Returns</option>
+      <option value="Rental Income">🏠 Rental Income</option>
+      <option value="Gift">🎁 Gift</option>
+      <option value="Other">📦 Other</option>`;
+  } else {
+    catSelect.innerHTML = `
+      <option value="Food & Dining">🍔 Food & Dining</option>
+      <option value="Groceries">🛒 Groceries</option>
+      <option value="Transport">🚗 Transport</option>
+      <option value="Entertainment">🎬 Entertainment</option>
+      <option value="Shopping">🛍️ Shopping</option>
+      <option value="Utilities">💡 Utilities</option>
+      <option value="Health">🏥 Health</option>
+      <option value="Investments">📈 Investments</option>
+      <option value="Other">📦 Other</option>`;
+  }
+}
+
+function addTransaction() {
+  const name = document.getElementById('txnName').value.trim();
+  const amount = parseFloat(document.getElementById('txnAmount').value);
+  const category = document.getElementById('txnCategory').value;
+  const date = document.getElementById('txnDate').value;
+
+  if (!name) { alert('Please enter a description'); return; }
+  if (!amount || amount <= 0) { alert('Please enter a valid amount'); return; }
+  if (!date) { alert('Please select a date'); return; }
+
+  const txn = {
+    id: Date.now(),
+    name, amount, category, date,
+    type: txnType
+  };
+
+  state.transactions.unshift(txn);
+  saveState();
+  closeModal('txnModal');
+
+  // Reset form
+  document.getElementById('txnName').value = '';
+  document.getElementById('txnAmount').value = '';
+  switchTxnType('expense');
+
+  renderAll();
+  aiTxnInsight(txn);
+}
+
+function aiTxnInsight(txn) {
+  const chat = document.getElementById('aiChat');
+  const totalIncome = state.transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const totalExpense = state.transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const savingsRate = totalIncome > 0 ? Math.round(((totalIncome - totalExpense) / totalIncome) * 100) : 0;
+
+  let msg = '';
+  if (txn.type === 'income') {
+    msg = `Great! ₹${txn.amount.toLocaleString('en-IN')} income recorded from ${txn.category}. Your total income this period is ₹${totalIncome.toLocaleString('en-IN')}.`;
+  } else {
+    const catTxns = state.transactions.filter(t=>t.type==='expense' && t.category===txn.category);
+    const catTotal = catTxns.reduce((s,t)=>s+t.amount,0);
+    msg = `₹${txn.amount.toLocaleString('en-IN')} spent on ${txn.category}. You've spent ₹${catTotal.toLocaleString('en-IN')} on ${txn.category} total.`;
+    if (totalIncome > 0) {
+      msg += ` Your current savings rate is ${savingsRate}%.`;
+    }
+  }
+
+  chat.innerHTML += `<div class="chat-msg ai"><strong>◈ FinAI</strong>${msg}</div>`;
+  chat.scrollTop = chat.scrollHeight;
+}
+
+// ═══════════ GOALS ═══════════
+function addGoal() {
+  const name = document.getElementById('goalName').value.trim();
+  const target = parseFloat(document.getElementById('goalTarget').value);
+  const saved = parseFloat(document.getElementById('goalSaved').value) || 0;
+  const date = document.getElementById('goalDate').value;
+  const icon = document.getElementById('goalIcon').value || '🎯';
+
+  if (!name) { alert('Please enter a goal name'); return; }
+  if (!target || target <= 0) { alert('Please enter a target amount'); return; }
+
+  state.goals.push({ id: Date.now(), name, target, saved, date, icon });
+  saveState();
+  closeModal('goalModal');
+
+  document.getElementById('goalName').value = '';
+  document.getElementById('goalTarget').value = '';
+  document.getElementById('goalSaved').value = '0';
+  document.getElementById('goalDate').value = '';
+  document.getElementById('goalIcon').value = '🎯';
+
+  renderGoals();
+}
+
+// ═══════════ BUDGETS ═══════════
+function addBudget() {
+  const category = document.getElementById('budgetCat').value;
+  const limit = parseFloat(document.getElementById('budgetLimit').value);
+
+  if (!limit || limit <= 0) { alert('Please enter a valid budget limit'); return; }
+
+  // Replace existing budget for same category
+  state.budgets = state.budgets.filter(b => b.category !== category);
+  state.budgets.push({ id: Date.now(), category, limit });
+  saveState();
+  closeModal('budgetModal');
+  document.getElementById('budgetLimit').value = '';
+
+  renderBudgets();
+}
+
+// ═══════════ AI CHAT ═══════════
+function sendAI() {
+  const input = document.getElementById('aiInput');
+  const chat = document.getElementById('aiChat');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  chat.innerHTML += `<div class="chat-msg user">${msg}</div>`;
+  input.value = '';
+
+  setTimeout(() => {
+    const reply = generateAIReply(msg);
+    chat.innerHTML += `<div class="chat-msg ai"><strong>◈ FinAI</strong>${reply}</div>`;
+    chat.scrollTop = chat.scrollHeight;
+  }, 600);
+
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function generateAIReply(msg) {
+  const m = msg.toLowerCase();
+  const totalIncome = state.transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const totalExpense = state.transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const savings = totalIncome - totalExpense;
+  const savingsRate = totalIncome > 0 ? Math.round((savings / totalIncome) * 100) : 0;
+
+  if (m.includes('save') || m.includes('saving')) {
+    if (totalIncome === 0) return "Add your income transactions first and I can calculate your savings rate!";
+    return `Your current savings rate is ${savingsRate}%. ${savingsRate >= 20 ? "That's healthy! Aim for 30%+ for financial freedom." : "Try to reduce discretionary spending to hit the 20% savings target."}`;
+  }
+  if (m.includes('spend') || m.includes('expense')) {
+    if (totalExpense === 0) return "No expenses recorded yet. Add some transactions and I'll analyse your spending patterns!";
+    const topCat = getTopCategory();
+    return `Your total expenses are ₹${totalExpense.toLocaleString('en-IN')}. Your biggest spending category is ${topCat.cat} at ₹${topCat.amount.toLocaleString('en-IN')}.`;
+  }
+  if (m.includes('income') || m.includes('earn')) {
+    if (totalIncome === 0) return "No income recorded yet. Add an income transaction and I'll give you personalised insights!";
+    return `Your recorded income is ₹${totalIncome.toLocaleString('en-IN')}. After expenses, you have ₹${Math.max(0,savings).toLocaleString('en-IN')} left.`;
+  }
+  if (m.includes('goal')) {
+    if (state.goals.length === 0) return "You haven't set any financial goals yet. Click '+ Add Goal' to create your first one!";
+    const g = state.goals[0];
+    const pct = Math.round((g.saved / g.target) * 100);
+    return `Your goal "${g.name}" is ${pct}% complete. ₹${(g.target - g.saved).toLocaleString('en-IN')} more to go!`;
+  }
+  if (m.includes('budget')) {
+    if (state.budgets.length === 0) return "No budgets set yet. Click '+ Set Budget' to create spending limits per category.";
+    return `You have ${state.budgets.length} budget(s) set. I'll alert you when you're close to the limit as you add more transactions.`;
+  }
+  if (m.includes('net worth') || m.includes('worth')) {
+    return `Your current net worth is ₹${Math.max(0, savings).toLocaleString('en-IN')} based on recorded transactions. Connect bank accounts for a complete picture.`;
+  }
+  // Default smart reply
+  const defaults = [
+    "Add more transactions and I can give you detailed insights about your financial health!",
+    "Try asking me: 'How are my savings?', 'What am I spending most on?', or 'How's my income?'",
+    totalIncome > 0 ? `Based on your data: income ₹${totalIncome.toLocaleString('en-IN')}, expenses ₹${totalExpense.toLocaleString('en-IN')}, savings rate ${savingsRate}%.` : "Start by adding an income transaction so I can give you personalised advice!"
+  ];
+  return defaults[Math.floor(Math.random() * defaults.length)];
+}
+
+function getTopCategory() {
+  const cats = {};
+  state.transactions.filter(t=>t.type==='expense').forEach(t => {
+    cats[t.category] = (cats[t.category] || 0) + t.amount;
+  });
+  let topCat = 'None', topAmt = 0;
+  Object.entries(cats).forEach(([cat, amt]) => { if (amt > topAmt) { topCat = cat; topAmt = amt; } });
+  return { cat: topCat, amount: topAmt };
+}
+
+// ═══════════ RENDER ALL ═══════════
+function renderAll() {
+  renderKPIs();
+  renderTransactions();
+  renderCharts();
+  renderGoals();
+  renderBudgets();
+}
+
+function renderKPIs() {
+  const totalIncome = state.transactions.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const totalExpense = state.transactions.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const netWorth = totalIncome - totalExpense;
+  const savingsRate = totalIncome > 0 ? Math.round(((totalIncome-totalExpense)/totalIncome)*100) : 0;
+
+  const nwEl = document.getElementById('kpiNetWorth');
+  nwEl.textContent = '₹' + Math.max(0, netWorth).toLocaleString('en-IN');
+  nwEl.className = 'kpi-val' + (netWorth === 0 ? ' kpi-zero' : '');
+  nwEl.style.color = netWorth > 0 ? 'var(--gold)' : netWorth < 0 ? 'var(--red)' : '';
+
+  const incEl = document.getElementById('kpiIncome');
+  incEl.textContent = '₹' + totalIncome.toLocaleString('en-IN');
+  incEl.className = 'kpi-val' + (totalIncome === 0 ? ' kpi-zero' : '');
+
+  const expEl = document.getElementById('kpiExpense');
+  expEl.textContent = '₹' + totalExpense.toLocaleString('en-IN');
+  expEl.className = 'kpi-val' + (totalExpense === 0 ? ' kpi-zero' : '');
+
+  const savEl = document.getElementById('kpiSavings');
+  savEl.textContent = savingsRate + '%';
+  savEl.className = 'kpi-val' + (savingsRate === 0 ? ' kpi-zero' : '');
+
+  document.getElementById('kpiNetWorthChange').textContent = totalIncome === 0 ? 'Add transactions to begin' : (netWorth >= 0 ? '▲ Positive balance' : '▼ Expenses exceed income');
+  document.getElementById('kpiIncomeChange').textContent = totalIncome === 0 ? 'No income recorded' : state.transactions.filter(t=>t.type==='income').length + ' income entries';
+  document.getElementById('kpiExpenseChange').textContent = totalExpense === 0 ? 'No expenses recorded' : state.transactions.filter(t=>t.type==='expense').length + ' expense entries';
+  document.getElementById('kpiSavingsChange').textContent = totalIncome === 0 ? 'Add income to calculate' : (savingsRate >= 20 ? '✓ Healthy savings rate' : '↑ Aim for 20%+');
+
+  const changeEl = document.getElementById('kpiSavingsChange');
+  changeEl.className = 'kpi-change' + (savingsRate >= 20 ? ' up' : savingsRate > 0 ? '' : '');
+}
+
+function renderTransactions() {
+  const list = document.getElementById('txnList');
+  if (state.transactions.length === 0) {
+    list.innerHTML = `<div class="empty-state" style="padding:2rem">
+      <div class="empty-icon">💳</div>
+      <div class="empty-title">No transactions yet</div>
+      <div class="empty-sub">Click "Add Transaction" to record your first income or expense</div>
+      <button class="empty-btn" onclick="openModal('txnModal')">+ Add Transaction</button>
+    </div>`;
+    return;
+  }
+
+  const catColors = {
+    'Food & Dining':'rgba(232,76,106,.1)','color1':'var(--red)',
+    'Groceries':'rgba(201,168,76,.1)','Salary':'rgba(61,204,142,.1)',
+    'Transport':'rgba(74,158,255,.1)','Entertainment':'rgba(30,202,184,.1)',
+    'Investments':'rgba(201,168,76,.1)','Utilities':'rgba(30,202,184,.1)',
+  };
+
+  const catEmojis = {
+    'Food & Dining':'🍔','Groceries':'🛒','Transport':'🚗','Entertainment':'🎬',
+    'Shopping':'🛍️','Utilities':'💡','Health':'🏥','Investments':'📈',
+    'Salary':'💼','Freelance':'💻','Business':'🏢','Other':'📦',
+    'Investment Returns':'📈','Rental Income':'🏠','Gift':'🎁'
+  };
+
+  const recent = state.transactions.slice(0, 8);
+  list.innerHTML = `<div class="txn-list">` + recent.map(t => {
+    const isIncome = t.type === 'income';
+    const bg = isIncome ? 'rgba(61,204,142,.1)' : 'rgba(232,76,106,.1)';
+    const emoji = catEmojis[t.category] || '📦';
+    const dateStr = new Date(t.date).toLocaleDateString('en-IN', {day:'numeric',month:'short'});
+    return `<div class="txn">
+      <div class="txn-icon" style="background:${bg}">${emoji}</div>
+      <div class="txn-info">
+        <div class="txn-name">${t.name}</div>
+        <div class="txn-cat">${t.category}</div>
+      </div>
+      <div class="txn-date">${dateStr}</div>
+      <div class="txn-amt ${isIncome?'cr':'dr'}">${isIncome?'+':'−'}₹${t.amount.toLocaleString('en-IN')}</div>
+    </div>`;
+  }).join('') + `</div>`;
+}
+
+function renderCharts() {
+  renderLineChart();
+  renderDonutChart();
+}
+
+function renderLineChart() {
+  // Group by month
+  const months = {};
+  state.transactions.forEach(t => {
+    const m = t.date.slice(0, 7); // "2026-04"
+    if (!months[m]) months[m] = { income: 0, expense: 0 };
+    if (t.type === 'income') months[m].income += t.amount;
+    else months[m].expense += t.amount;
+  });
+
+  const labels = Object.keys(months).sort();
+  const incomeData = labels.map(m => months[m].income);
+  const expenseData = labels.map(m => months[m].expense);
+
+  const friendlyLabels = labels.map(m => {
+    const [y, mo] = m.split('-');
+    return new Date(y, mo-1).toLocaleString('en-IN', {month:'short', year:'2-digit'});
+  });
+
+  if (lineChart) lineChart.destroy();
+
+  const ctx = document.getElementById('lineChart').getContext('2d');
+
+  if (labels.length === 0) {
+    document.getElementById('chartSub').textContent = 'No transactions yet — add some to see your chart';
+    // Draw empty placeholder
+    lineChart = new Chart(ctx, {
+      type: 'line',
+      data: { labels: ['Jan','Feb','Mar','Apr','May','Jun'], datasets: [{
+        label:'Income', data:[0,0,0,0,0,0], borderColor:'rgba(61,204,142,.2)',
+        backgroundColor:'rgba(61,204,142,.02)', borderWidth:1, fill:true, tension:.4
+      },{
+        label:'Expenses', data:[0,0,0,0,0,0], borderColor:'rgba(232,76,106,.2)',
+        backgroundColor:'rgba(232,76,106,.02)', borderWidth:1, fill:true, tension:.4
+      }]},
+      options: chartOptions()
+    });
+    return;
+  }
+
+  document.getElementById('chartSub').textContent = `Showing ${labels.length} month(s) of data`;
+  lineChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: friendlyLabels.length === 1 ? [...friendlyLabels, ''] : friendlyLabels,
+      datasets: [
+        { label:'Income', data: incomeData.length===1?[...incomeData,null]:incomeData, borderColor:'#3DCC8E', backgroundColor:'rgba(61,204,142,.08)', borderWidth:2, pointRadius:4, pointBackgroundColor:'#3DCC8E', fill:true, tension:.4 },
+        { label:'Expenses', data: expenseData.length===1?[...expenseData,null]:expenseData, borderColor:'#E84C6A', backgroundColor:'rgba(232,76,106,.06)', borderWidth:2, pointRadius:4, pointBackgroundColor:'#E84C6A', fill:true, tension:.4 }
+      ]
+    },
+    options: chartOptions()
+  });
+}
+
+function chartOptions() {
+  return {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{ labels:{ color:'#9B9589', font:{size:11}, boxWidth:12, padding:16 } },
+      tooltip:{ backgroundColor:'#1E2023', titleColor:'#F2EDE4', bodyColor:'#9B9589', borderColor:'rgba(201,168,76,.2)', borderWidth:1,
+        callbacks:{ label: ctx => ' ₹' + (ctx.raw||0).toLocaleString('en-IN') }
+      }
+    },
+    scales:{
+      x:{ grid:{color:'rgba(255,255,255,.04)'}, ticks:{color:'#5A5750',font:{size:11}} },
+      y:{ grid:{color:'rgba(255,255,255,.04)'}, ticks:{color:'#5A5750',font:{size:11}, callback: v=>'₹'+(v/1000).toFixed(0)+'k'} }
+    }
+  };
+}
+
+function renderDonutChart() {
+  const expenses = state.transactions.filter(t => t.type === 'expense');
+  const cats = {};
+  expenses.forEach(t => { cats[t.category] = (cats[t.category]||0) + t.amount; });
+
+  const catColors2 = ['#E84C6A','#C9A84C','#3DCC8E','#4A9EFF','#1ECAB8','#A78BFA','#F97316','#888780'];
+  const labels = Object.keys(cats);
+  const values = Object.values(cats);
+  const total = values.reduce((s,v)=>s+v,0);
+
+  if (donutChart) donutChart.destroy();
+  const ctx = document.getElementById('donutChart').getContext('2d');
+
+  document.getElementById('donutTotal').textContent = total > 0 ? '₹' + total.toLocaleString('en-IN') : '₹0';
+
+  if (labels.length === 0) {
+    donutChart = new Chart(ctx, {
+      type:'doughnut',
+      data:{ labels:['No data'], datasets:[{ data:[1], backgroundColor:['rgba(255,255,255,.06)'], borderWidth:0 }] },
+      options:{ responsive:true, maintainAspectRatio:false, cutout:'72%', plugins:{ legend:{display:false}, tooltip:{enabled:false} } }
+    });
+    document.getElementById('donutLegend').innerHTML = `<div style="text-align:center;font-size:.78rem;color:var(--text-dim);padding:.5rem 0">Add expenses to see breakdown</div>`;
+    return;
+  }
+
+  donutChart = new Chart(ctx, {
+    type:'doughnut',
+    data:{ labels, datasets:[{ data:values, backgroundColor:catColors2.slice(0,labels.length), borderWidth:0, hoverOffset:6 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'72%',
+      plugins:{ legend:{display:false},
+        tooltip:{ backgroundColor:'#1E2023', titleColor:'#F2EDE4', bodyColor:'#9B9589', borderColor:'rgba(201,168,76,.2)', borderWidth:1,
+          callbacks:{ label: ctx => ' ₹' + ctx.raw.toLocaleString('en-IN') }
+        }
+      }
+    }
+  });
+
+  document.getElementById('donutLegend').innerHTML = labels.map((l,i) => {
+    const pct = Math.round(values[i]/total*100);
+    return `<div class="legend-item">
+      <span class="legend-label"><span class="legend-dot" style="background:${catColors2[i]}"></span>${l}</span>
+      <span class="legend-val">${pct}%</span>
+    </div>`;
+  }).join('');
+}
+
+function renderGoals() {
+  const grid = document.getElementById('goalsGrid');
+  if (state.goals.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="margin-bottom:2rem">
+      <div class="empty-icon">🎯</div>
+      <div class="empty-title">No goals set yet</div>
+      <div class="empty-sub">Set a financial goal like "Buy a Car" or "Emergency Fund" and track your progress</div>
+      <button class="empty-btn" onclick="openModal('goalModal')">+ Create First Goal</button>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = `<div class="goals-grid">` + state.goals.map(g => {
+    const pct = Math.min(100, Math.round((g.saved / g.target) * 100));
+    const color = pct >= 80 ? 'var(--green)' : pct >= 50 ? 'var(--gold)' : 'var(--blue)';
+    const dateStr = g.date ? new Date(g.date).toLocaleDateString('en-IN',{month:'short',year:'numeric'}) : 'No deadline';
+    return `<div class="goal-card">
+      <div class="goal-header">
+        <div class="goal-icon" style="background:rgba(201,168,76,.1)">${g.icon}</div>
+        <div class="goal-pct" style="color:${color}">${pct}%</div>
+      </div>
+      <div class="goal-name">${g.name}</div>
+      <div class="goal-sub">₹${g.saved.toLocaleString('en-IN')} of ₹${g.target.toLocaleString('en-IN')} · Target: ${dateStr}</div>
+      <div class="goal-bar-bg"><div class="goal-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+      <div class="goal-meta">
+        <span>₹${g.saved.toLocaleString('en-IN')} saved</span>
+        <span>₹${(g.target-g.saved).toLocaleString('en-IN')} to go</span>
+      </div>
+    </div>`;
+  }).join('') + `</div>`;
+}
+
+function renderBudgets() {
+  const grid = document.getElementById('budgetGrid');
+  if (state.budgets.length === 0) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📊</div>
+      <div class="empty-title">No budgets set</div>
+      <div class="empty-sub">Set spending limits per category and FinAI will track them against your transactions</div>
+      <button class="empty-btn" onclick="openModal('budgetModal')">+ Set First Budget</button>
+    </div>`;
+    return;
+  }
+
+  const catEmojis2 = { 'Food & Dining':'🍔','Groceries':'🛒','Transport':'🚗','Entertainment':'🎬','Shopping':'🛍️','Utilities':'💡','Health':'🏥','Other':'📦' };
+
+  grid.innerHTML = `<div class="budget-grid">` + state.budgets.map(b => {
+    const spent = state.transactions.filter(t => t.type==='expense' && t.category===b.category).reduce((s,t)=>s+t.amount,0);
+    const pct = Math.min(100, Math.round((spent / b.limit) * 100));
+    const color = pct >= 100 ? 'var(--red)' : pct >= 80 ? 'var(--gold)' : 'var(--green)';
+    const statusText = pct >= 100 ? `Over by ₹${(spent-b.limit).toLocaleString('en-IN')}` : `₹${(b.limit-spent).toLocaleString('en-IN')} remaining`;
+    return `<div class="budget-item">
+      <div class="budget-row">
+        <div class="budget-cat"><span>${catEmojis2[b.category]||'📦'}</span>${b.category}</div>
+        <div class="budget-nums"><strong>₹${spent.toLocaleString('en-IN')}</strong> / ₹${b.limit.toLocaleString('en-IN')}</div>
+      </div>
+      <div class="bbar-bg"><div class="bbar-fill" style="width:${pct}%;background:${color}"></div></div>
+      <div style="font-size:.68rem;color:${color};margin-top:.3rem">${statusText}</div>
+    </div>`;
+  }).join('') + `</div>`;
+}
+
+// ═══════════ MODAL HELPERS ═══════════
+function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+function handleOverlayClick(e, id) { if (e.target.id === id) closeModal(id); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') ['txnModal','goalModal','budgetModal'].forEach(closeModal); });
+</script>
+</body>
+</html>
