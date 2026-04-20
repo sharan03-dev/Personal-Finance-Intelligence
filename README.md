@@ -6,7 +6,7 @@ FileDescriptionindex.html🏠 Landing/Home pagelogin.html🔐 Sign In pagedashbo
 🌐 Live Demo
 
 Hosted via GitHub Pages:
-https://YOUR-USERNAME.github.io/YOUR-REPO-NAME/
+https://github.com/sharan03-dev/Personal-Finance-Intelligence
 
 
 ✨ Features
